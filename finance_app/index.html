@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>极简记账</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>极简记账</h1>
+      <p class="balance-label">当前结余</p>
+      <p class="balance" id="balance">¥0.00</p>
+    </header>
+
+    <div id="budget-alert" class="budget-alert hidden" role="alert"></div>
+
+    <section class="card">
+      <h2>记一笔</h2>
+      <form id="form" novalidate>
+        <div class="tabs" id="form-type-tabs">
+          <button type="button" class="tab active" data-type="expense">支出</button>
+          <button type="button" class="tab" data-type="income">收入</button>
+        </div>
+        <input type="hidden" id="type" value="expense">
+        <label class="field-label" for="record-date">记账日期</label>
+        <div class="date-quick" id="form-date-quick">
+          <button type="button" class="date-shortcut active" data-offset="0">今天</button>
+          <button type="button" class="date-shortcut" data-offset="1">昨天</button>
+          <button type="button" class="date-shortcut" data-offset="3">3天前</button>
+        </div>
+        <input type="date" id="record-date" required aria-label="选择记账日期">
+        <p class="field-hint">可补录往日消费，日期不能晚于今天</p>
+        <label class="field-label" for="amount">金额（元）</label>
+        <input type="number" id="amount" placeholder="请输入金额" min="0.01" step="0.01" required inputmode="decimal">
+        <label class="field-label" for="category">分类</label>
+        <select id="category" required aria-label="选择分类"></select>
+        <label class="field-label" for="note">备注</label>
+        <input type="text" id="note" placeholder="选填，如：午餐、月薪" maxlength="40">
+        <button type="submit" class="btn-submit">保存记录</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="stats-head">
+        <h2>收支统计</h2>
+      </div>
+      <div class="period-tabs scroll-tabs" id="stat-period-tabs">
+        <button type="button" class="period active" data-period="7">近7天</button>
+        <button type="button" class="period" data-period="30">近30天</button>
+        <button type="button" class="period" data-period="thisMonth">本月</button>
+        <button type="button" class="period" data-period="lastMonth">上月</button>
+      </div>
+      <p class="period-label" id="period-label"></p>
+      <div class="stats-grid">
+        <div class="stat">
+          <span class="stat-label">收入合计</span>
+          <span class="stat-value income" id="stat-income">¥0.00</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">支出合计</span>
+          <span class="stat-value expense" id="stat-expense">¥0.00</span>
+        </div>
+      </div>
+      <p class="chart-title">每日收支柱状图</p>
+      <canvas id="chart" role="img" aria-label="每日收入与支出柱状图"></canvas>
+      <p class="chart-legend">
+        <span class="dot income"></span>收入
+        <span class="dot expense"></span>支出
+      </p>
+      <p class="chart-title">分类占比</p>
+      <div class="tabs pie-tabs" id="pie-type-tabs">
+        <button type="button" class="tab pie-tab active" data-pie="expense">支出占比</button>
+        <button type="button" class="tab pie-tab" data-pie="income">收入占比</button>
+      </div>
+      <canvas id="pie-chart" role="img" aria-label="分类占比饼图"></canvas>
+      <ul id="pie-legend" class="pie-legend"></ul>
+    </section>
+
+    <section class="card">
+      <h2>本月预算</h2>
+      <p class="field-hint">设置后达 90% 预警，超支会提示</p>
+      <label class="field-label" for="budget-total">支出总预算（元）</label>
+      <input type="number" id="budget-total" placeholder="选填，如 5000" min="0" step="100" inputmode="numeric">
+      <div id="budget-categories" class="budget-list"></div>
+      <button type="button" class="btn-submit btn-secondary" id="save-budget">保存预算</button>
+    </section>
+
+    <section class="card">
+      <h2>自定义分类</h2>
+      <p class="field-hint">可添加或删除分类（有记录的分类无法删除）</p>
+      <div class="category-manage">
+        <p class="cat-type-title">收入分类</p>
+        <ul id="income-cat-list" class="cat-list"></ul>
+        <div class="cat-add-row">
+          <input type="text" id="new-income-cat" placeholder="新收入分类" maxlength="12">
+          <button type="button" class="btn-small" id="add-income-cat">添加</button>
+        </div>
+        <p class="cat-type-title">支出分类</p>
+        <ul id="expense-cat-list" class="cat-list"></ul>
+        <div class="cat-add-row">
+          <input type="text" id="new-expense-cat" placeholder="新支出分类" maxlength="12">
+          <button type="button" class="btn-small" id="add-expense-cat">添加</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>数据备份</h2>
+      <div class="backup-btns">
+        <button type="button" class="btn-small" id="export-json">导出 JSON</button>
+        <button type="button" class="btn-small" id="export-csv">导出 CSV</button>
+        <button type="button" class="btn-small" id="import-json">导入 JSON</button>
+      </div>
+      <input type="file" id="import-file" accept=".json,application/json" class="hidden">
+      <p class="field-hint">导入会覆盖当前全部数据，请先导出备份</p>
+    </section>
+
+    <section class="card">
+      <h2>全部记录</h2>
+      <div class="filter-box">
+        <input type="search" id="filter-keyword" placeholder="搜索备注或分类" aria-label="搜索">
+        <div class="filter-row">
+          <select id="filter-type" aria-label="类型筛选">
+            <option value="all">全部类型</option>
+            <option value="income">仅收入</option>
+            <option value="expense">仅支出</option>
+          </select>
+          <select id="filter-category" aria-label="分类筛选">
+            <option value="all">全部分类</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <input type="date" id="filter-from" aria-label="开始日期">
+          <span class="filter-sep">至</span>
+          <input type="date" id="filter-to" aria-label="结束日期">
+        </div>
+        <button type="button" class="btn-small btn-ghost" id="filter-reset">重置筛选</button>
+      </div>
+      <p id="filter-count" class="filter-count"></p>
+      <ul id="list" class="list"></ul>
+      <p id="empty" class="empty">还没有任何记录，请先记一笔</p>
+    </section>
+  </div>
+
+  <div id="edit-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" id="edit-backdrop"></div>
+    <div class="modal-panel modal-scroll" role="dialog" aria-labelledby="edit-title">
+      <h3 id="edit-title">编辑记录</h3>
+      <form id="edit-form" novalidate>
+        <div class="tabs" id="edit-type-tabs">
+          <button type="button" class="tab edit-tab active" data-type="expense">支出</button>
+          <button type="button" class="tab edit-tab" data-type="income">收入</button>
+        </div>
+        <input type="hidden" id="edit-type" value="expense">
+        <label class="field-label" for="edit-date">记账日期</label>
+        <div class="date-quick" id="edit-date-quick">
+          <button type="button" class="edit-date-shortcut" data-offset="0">今天</button>
+          <button type="button" class="edit-date-shortcut" data-offset="1">昨天</button>
+          <button type="button" class="edit-date-shortcut" data-offset="3">3天前</button>
+        </div>
+        <input type="date" id="edit-date" required>
+        <label class="field-label" for="edit-amount">金额（元）</label>
+        <input type="number" id="edit-amount" min="0.01" step="0.01" required inputmode="decimal">
+        <label class="field-label" for="edit-category">分类</label>
+        <select id="edit-category" required></select>
+        <label class="field-label" for="edit-note">备注</label>
+        <input type="text" id="edit-note" maxlength="40" placeholder="选填">
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="edit-cancel">取消</button>
+          <button type="submit" class="btn-save">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

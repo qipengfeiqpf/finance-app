@@ -1,0 +1,659 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #f5f5f5;
+  --card: #fff;
+  --text: #1a1a1a;
+  --muted: #888;
+  --income: #22c55e;
+  --expense: #ef4444;
+  --accent: #2563eb;
+  --warn: #d97706;
+  --radius: 10px;
+  --safe-bottom: env(safe-area-inset-bottom, 0);
+}
+
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1rem 1rem calc(1.5rem + var(--safe-bottom));
+}
+
+header {
+  text-align: center;
+  padding: 1.25rem 0 1rem;
+}
+
+header h1 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.balance-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+
+.balance {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.budget-alert {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  border-radius: var(--radius);
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.budget-alert p + p {
+  margin-top: 0.25rem;
+}
+
+.budget-alert.hidden {
+  display: none;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.card h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: -0.35rem 0 0.6rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.date-quick {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.date-shortcut,
+.edit-date-shortcut {
+  flex: 1;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.8rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.date-shortcut.active,
+.edit-date-shortcut.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #eff6ff;
+}
+
+#record-date,
+#edit-date {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  font-family: inherit;
+}
+
+#record-date:focus,
+#edit-date:focus {
+  border-color: var(--accent);
+}
+
+.chart-title {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0.75rem 0 0.35rem;
+}
+
+.period-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.tabs,
+.period-tabs,
+.scroll-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.scroll-tabs {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.scroll-tabs .period {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.pie-tabs {
+  margin-top: 0.25rem;
+}
+
+.tab,
+.period {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tab.active,
+.period.active {
+  background: var(--text);
+  color: #fff;
+  border-color: var(--text);
+}
+
+#form input,
+#form select,
+#edit-form input,
+#edit-form select,
+#budget-total,
+.filter-box input,
+.filter-box select,
+.budget-row input,
+.cat-add-row input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  font-family: inherit;
+}
+
+#form input:focus,
+#form select:focus,
+#edit-form input:focus,
+#edit-form select:focus {
+  border-color: var(--accent);
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 0.7rem;
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-submit:active {
+  opacity: 0.85;
+}
+
+.btn-secondary {
+  background: var(--text);
+  margin-top: 0.5rem;
+}
+
+.btn-small {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-ghost {
+  width: 100%;
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.stats-head h2 {
+  margin-bottom: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.stat {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.stat-value.income {
+  color: var(--income);
+}
+
+.stat-value.expense {
+  color: var(--expense);
+}
+
+#chart,
+#pie-chart {
+  display: block;
+  width: 100%;
+}
+
+#chart {
+  height: 160px;
+}
+
+#pie-chart {
+  height: 180px;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.35rem;
+}
+
+.pie-legend {
+  list-style: none;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+
+.pie-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0;
+}
+
+.pie-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.dot.income {
+  background: var(--income);
+}
+
+.dot.expense {
+  background: var(--expense);
+}
+
+.budget-list {
+  margin-bottom: 0.5rem;
+}
+
+.budget-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.budget-row label {
+  flex: 0 0 4.5rem;
+  font-size: 0.85rem;
+}
+
+.budget-row input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.cat-type-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0.35rem;
+}
+
+.cat-list {
+  list-style: none;
+  margin-bottom: 0.5rem;
+}
+
+.cat-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+}
+
+.cat-add-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.cat-add-row input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.btn-remove-cat {
+  font-size: 0.75rem;
+  color: var(--expense);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.backup-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.filter-box {
+  margin-bottom: 0.5rem;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.filter-row input,
+.filter-row select {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.filter-sep {
+  font-size: 0.8rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.filter-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.list {
+  list-style: none;
+}
+
+.list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.list li:last-child {
+  border-bottom: none;
+}
+
+.item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.item-icon.income {
+  background: #dcfce7;
+  color: var(--income);
+}
+
+.item-icon.expense {
+  background: #fee2e2;
+  color: var(--expense);
+}
+
+.item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.item-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.item-amount {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.item-amount.income {
+  color: var(--income);
+}
+
+.item-amount.expense {
+  color: var(--expense);
+}
+
+.item-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.15rem;
+}
+
+.btn-edit,
+.btn-del {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.25rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.btn-del {
+  font-size: 1.2rem;
+}
+
+.btn-edit {
+  color: var(--accent);
+}
+
+.btn-edit:active,
+.btn-del:active {
+  background: #f0f0f0;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.modal-panel {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--card);
+  border-radius: 16px 16px 0 0;
+  padding: 1.25rem 1rem calc(1.25rem + var(--safe-bottom));
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.modal-panel h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn-cancel,
+.btn-save {
+  flex: 1;
+  padding: 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.btn-save {
+  background: var(--accent);
+  color: #fff;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 1rem 0;
+}
+
+.empty.hidden {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .modal {
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .modal-panel {
+    border-radius: var(--radius);
+  }
+}
+
+@media (max-width: 360px) {
+  .balance {
+    font-size: 1.75rem;
+  }
+
+  .item-amount {
+    font-size: 0.85rem;
+  }
+}
