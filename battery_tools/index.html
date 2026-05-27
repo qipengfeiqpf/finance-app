@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>锂电循环数据分析 · Battery Tools V1</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-title">
+        <h1>锂电循环数据分析</h1>
+        <span class="version">V1</span>
+      </div>
+      <section class="stats" id="stats" aria-live="polite">
+        <div class="stat-card stat-charge">
+          <span class="stat-label">初始 Charge Capacity</span>
+          <span class="stat-value" id="stat-charge-initial">—</span>
+          <span class="stat-unit">mAh/g</span>
+        </div>
+        <div class="stat-card stat-charge">
+          <span class="stat-label">最终 Charge Capacity</span>
+          <span class="stat-value" id="stat-charge-final">—</span>
+          <span class="stat-unit">mAh/g</span>
+        </div>
+        <div class="stat-card stat-discharge">
+          <span class="stat-label">初始 Discharge Capacity</span>
+          <span class="stat-value" id="stat-discharge-initial">—</span>
+          <span class="stat-unit">mAh/g</span>
+        </div>
+        <div class="stat-card stat-discharge">
+          <span class="stat-label">最终 Discharge Capacity</span>
+          <span class="stat-value" id="stat-discharge-final">—</span>
+          <span class="stat-unit">mAh/g</span>
+        </div>
+        <div class="stat-card stat-retention">
+          <span class="stat-label">Reference Cycle</span>
+          <span class="stat-value" id="stat-reference-cycle">—</span>
+          <span class="stat-unit">cycle</span>
+        </div>
+        <div class="stat-card stat-retention">
+          <span class="stat-label">Reference Capacity</span>
+          <span class="stat-value" id="stat-reference-capacity">—</span>
+          <span class="stat-unit">mAh/g</span>
+        </div>
+        <div class="stat-card stat-highlight">
+          <span class="stat-label">Retention</span>
+          <span class="stat-value" id="stat-retention">—</span>
+          <span class="stat-unit">%</span>
+        </div>
+        <div class="stat-card stat-ce">
+          <span class="stat-label">平均 CE</span>
+          <span class="stat-value" id="stat-ce-avg">—</span>
+          <span class="stat-unit">%</span>
+        </div>
+        <div class="stat-card stat-ce">
+          <span class="stat-label">首圈 CE</span>
+          <span class="stat-value" id="stat-ce-first">—</span>
+          <span class="stat-unit">%</span>
+        </div>
+        <div class="stat-card stat-ce">
+          <span class="stat-label">末圈 CE</span>
+          <span class="stat-value" id="stat-ce-last">—</span>
+          <span class="stat-unit">%</span>
+        </div>
+      </section>
+    </header>
+
+    <main class="main">
+      <aside class="panel panel-upload">
+        <div
+          class="dropzone"
+          id="dropzone"
+          role="button"
+          tabindex="0"
+          aria-label="拖入或选择 Excel、CSV 文件"
+        >
+          <div class="dropzone-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M24 32V16M16 24l8-8 8 8"/>
+              <rect x="8" y="8" width="32" height="32" rx="2"/>
+            </svg>
+          </div>
+          <p class="dropzone-title">拖入数据文件</p>
+          <p class="dropzone-hint">支持 .xlsx、.xls、.csv</p>
+          <p class="dropzone-hint">或点击选择文件</p>
+          <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden>
+        </div>
+        <p class="file-name" id="file-name"></p>
+        <p class="column-hint">
+          自动识别列：<code>Cycle</code> / <code>Cycle Number</code>；
+          <code>Charge Capacity</code> / <code>Charge</code> / <code>充电比容量</code>；
+          <code>Discharge Capacity</code> / <code>Discharge</code> / <code>放电比容量</code>；
+          <code>Capacity</code>（单列时视作放电容量）；
+          <code>CE</code> / <code>Coulombic Efficiency</code>（可选）
+        </p>
+        <div class="retention-setting">
+          <label class="retention-field" for="reference-cycle">
+            <span class="retention-field-label">Reference Cycle</span>
+            <input
+              type="number"
+              id="reference-cycle"
+              value="28"
+              min="1"
+              step="1"
+              autocomplete="off"
+              disabled
+            >
+          </label>
+          <p class="retention-hint">容量保持率 = 末圈 Discharge ÷ 基准圈 Discharge × 100%</p>
+        </div>
+        <div class="rate-setting">
+          <label class="rate-field" for="charge-rate">
+            <span class="rate-field-label">Charge Rate (C)</span>
+            <input
+              type="number"
+              id="charge-rate"
+              value="0.5"
+              min="0"
+              step="any"
+              autocomplete="off"
+              disabled
+            >
+          </label>
+          <label class="rate-field" for="discharge-rate">
+            <span class="rate-field-label">Discharge Rate (C)</span>
+            <input
+              type="number"
+              id="discharge-rate"
+              value="0.5"
+              min="0"
+              step="any"
+              autocomplete="off"
+              disabled
+            >
+          </label>
+          <p class="rate-hint">倍率用于图内实验信息标注，修改后立即更新</p>
+        </div>
+        <p class="message" id="message" role="status"></p>
+        <button type="button" class="btn-export" id="btn-export" disabled>导出图像</button>
+      </aside>
+
+      <section class="panel panel-chart">
+        <div class="title-controls" id="title-controls" aria-label="图表标题设置">
+          <div class="title-controls-head">
+            <span class="title-controls-heading">图表标题</span>
+            <button type="button" class="btn-axis btn-axis-secondary" id="btn-reset-titles" disabled>恢复默认标题</button>
+          </div>
+          <div class="title-controls-fields">
+            <label class="title-field title-field-wide">
+              <span class="title-field-label">Title</span>
+              <input type="text" id="chart-title" value="Cycle Performance" autocomplete="off" disabled>
+            </label>
+            <label class="title-field">
+              <span class="title-field-label">X Axis Title</span>
+              <input type="text" id="chart-x-axis-title" value="Cycle Number" autocomplete="off" disabled>
+            </label>
+            <label class="title-field title-field-wide">
+              <span class="title-field-label">Left Y Title</span>
+              <input type="text" id="chart-left-y-title" value="Capacity (mAh g⁻¹)" autocomplete="off" disabled>
+            </label>
+            <label class="title-field title-field-wide" id="title-field-right-y">
+              <span class="title-field-label">Right Y Title</span>
+              <input type="text" id="chart-right-y-title" value="Coulombic Efficiency (%)" autocomplete="off" disabled>
+            </label>
+          </div>
+          <p class="title-controls-hint">标题将显示于图表并包含在 PNG 导出中；修改后失焦或按 Enter 更新</p>
+        </div>
+        <div class="axis-controls" id="axis-controls" aria-label="坐标轴范围设置">
+          <div class="axis-controls-fields">
+            <fieldset class="axis-fieldset" id="axis-fieldset-x" disabled>
+              <legend>X 轴 · Cycle Number</legend>
+              <label class="axis-field">
+                <span class="axis-field-label">X Min</span>
+                <input type="number" id="axis-x-min" step="any" placeholder="自动" autocomplete="off">
+              </label>
+              <label class="axis-field">
+                <span class="axis-field-label">X Max</span>
+                <input type="number" id="axis-x-max" step="any" placeholder="自动" autocomplete="off">
+              </label>
+            </fieldset>
+            <fieldset class="axis-fieldset axis-fieldset-capacity" id="axis-fieldset-capacity" disabled>
+              <legend>左 Y 轴 · Capacity</legend>
+              <label class="axis-field">
+                <span class="axis-field-label">Capacity Min</span>
+                <input type="number" id="axis-capacity-min" step="any" placeholder="自动" autocomplete="off">
+              </label>
+              <label class="axis-field">
+                <span class="axis-field-label">Capacity Max</span>
+                <input type="number" id="axis-capacity-max" step="any" placeholder="自动" autocomplete="off">
+              </label>
+            </fieldset>
+            <fieldset class="axis-fieldset axis-fieldset-ce" id="axis-fieldset-ce" disabled>
+              <legend>右 Y 轴 · CE</legend>
+              <label class="axis-field">
+                <span class="axis-field-label">CE Min</span>
+                <input type="number" id="axis-ce-min" step="any" placeholder="自动" autocomplete="off">
+              </label>
+              <label class="axis-field">
+                <span class="axis-field-label">CE Max</span>
+                <input type="number" id="axis-ce-max" step="any" placeholder="自动" autocomplete="off">
+              </label>
+            </fieldset>
+            <div class="axis-controls-actions">
+              <button type="button" class="btn-axis" id="btn-apply-axis" disabled>应用范围</button>
+              <button type="button" class="btn-axis btn-axis-secondary" id="btn-reset-axis" disabled>恢复自动范围</button>
+            </div>
+          </div>
+          <p class="axis-controls-hint">留空表示自动范围；左轴控制 Charge / Discharge Capacity，右轴仅控制 CE</p>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="cycle-chart" role="img" aria-label="循环容量曲线图"></canvas>
+          <div class="chart-placeholder" id="chart-placeholder">
+            <p>导入数据后显示充放电容量 / CE 曲线</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
